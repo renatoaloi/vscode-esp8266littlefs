@@ -1,0 +1,66 @@
+{
+  "name": "vscode-esp8266littlefs",
+  "displayName": "ESP8266LittleFS",
+  "description": "ESP8266 littlefs filesystem uploader",
+  "version": "0.0.1",
+  "publisher": "renatoaloi",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:esp8266littlefs.uploadLittlefs",
+    "onCommand:esp8266littlefs.downloadLittlefs",
+    "onCommand:esp8266littlefs.packLittlefs",
+    "onCommand:esp8266littlefs.unpackLittlefs",
+    "onCommand:esp8266littlefs.listLittlefs",
+    "onCommand:esp8266littlefs.visualizeLittlefs"
+  ],
+  "main": "./esp8266littlefs.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "esp8266littlefs.uploadLittlefs",
+        "title": "ESP8266LITTLEFS: Upload"
+      },
+      {
+        "command": "esp8266littlefs.downloadLittlefs",
+        "title": "ESP8266LITTLEFS: Download"
+      },
+      {
+        "command": "esp8266littlefs.packLittlefs",
+        "title": "ESP8266LITTLEFS: Pack"
+      },
+      {
+        "command": "esp8266littlefs.unpackLittlefs",
+        "title": "ESP8266LITTLEFS: Unpack"
+      },
+      {
+        "command": "esp8266littlefs.listLittlefs",
+        "title": "ESP8266LITTLEFS: List"
+      },
+      {
+        "command": "esp8266littlefs.visualizeLittlefs",
+        "title": "ESP8266LITTLEFS: Visualize"
+      }
+    ]
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "pretest": "npm run lint",
+    "test": "node ./test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.74.0",
+    "@types/glob": "^8.0.0",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "16.x",
+    "eslint": "^8.28.0",
+    "glob": "^8.0.3",
+    "mocha": "^10.1.0",
+    "typescript": "^4.9.3",
+    "@vscode/test-electron": "^2.2.0"
+  }
+}
