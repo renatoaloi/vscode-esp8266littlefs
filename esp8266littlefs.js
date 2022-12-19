@@ -13,6 +13,10 @@ const BLUE = "\u001b[34m";
 let outputChannel = null;
 let logLevel = "normal"; // "normal", "verbose", "silent", "debug"
 
+function toHex(decimal, width = 4) {
+	return ("0".repeat(width) + (Number(decimal).toString(16))).slice(-width).toUpperCase();
+}
+
 function log(message, color) {
 	if (logLevel === "silent")
 		return;
@@ -51,7 +55,7 @@ function stringToInt(value) {
 
 function makeMklittlefsArgs(args) {
 	args.push("--all-files");
-	args.unshift("--debug");
+	args.unshift("--debug 0");
 	return args;
 }
 
@@ -147,7 +151,15 @@ function getPort() {
 }
 
 function getDataFilesPath() {
-	return "./data";
+	return "c:/dev/Aloioff/Aloioff/data";
+}
+
+function getFlashMode() {
+	return "dout";
+}
+
+function getFlashFreq() {
+	return "40";
 }
 
 function fileExists(file) {
@@ -166,19 +178,30 @@ function getMkLittlefs() {
 	return mklittlefs;
 }
 
-function getLittlefsOptions(target) {
+function getOptions(target) {
 	const littlefsOptions = {};
 
-	readLines(path.join(packagesPath, "boards.txt"))
-		.forEach(line => {
-			const match = line.match(`${target.board}\\.(?:build|upload)\\.(\\S+)=(\\S+)`)
-				|| line.match(`${target.board}\\.menu\\.eesz\\.${target.flashSize}\\.(?:build|upload)\\.(\\S+)=(\\S+)`)
-				|| line.match(`${target.board}\\.menu\\.PartitionScheme\\.${arduinoJson.PartitionScheme}\\.(?:build|upload)\\.(\\S+)=(\\S+)`);
-
-			if (match)
-				littlefsOptions[match[1]] = match[2];
-		}
-		);
+	littlefsOptions["board"] = "ESP8266_GENERIC";
+	littlefsOptions["tool"] = "esptool";
+	littlefsOptions["maximum_data_size"] = "81920";
+	littlefsOptions["wait_for_upload_port"] = "true";
+	littlefsOptions["erase_cmd"] = "";
+	littlefsOptions["mcu"] = "esp8266";
+	littlefsOptions["core"] = "esp8266";
+	littlefsOptions["variant"] = "generic";
+	littlefsOptions["spiffs_pagesize"] = "256";
+	littlefsOptions["debug_port"] = "";
+	littlefsOptions["debug_level"] = "";
+	littlefsOptions["generic.menu.eesz.1M256"] = "1MB (FS:256KB OTA:~374KB)";
+	littlefsOptions["flash_size"] = "1M";
+	littlefsOptions["flash_size_bytes"] = "0x100000";
+	littlefsOptions["flash_ld"] = "eagle.flash.1m256.ld";
+	littlefsOptions["spiffs_pagesize"] = "256";
+	littlefsOptions["maximum_size"] = "761840";
+	littlefsOptions["rfcal_addr"] = "0xFC000";
+	littlefsOptions["spiffs_start"] = "0xBB000";
+	littlefsOptions["spiffs_end"] = "0xFB000";
+	littlefsOptions["spiffs_blocksize"] = "4096";
 
 	if (!littlefsOptions.spiffs_start)
 		throw `Missing "spiffs_start" definition: target = ${target.architecture}, config = ${target.memoryConfig}.`;
@@ -187,11 +210,23 @@ function getLittlefsOptions(target) {
 		throw `Missing "spiffs_end" definition: target = ${target.architecture}, config = ${target.memoryConfig}.`;
 
 	littlefsOptions.dataSize = (stringToInt(littlefsOptions.spiffs_end) - stringToInt(littlefsOptions.spiffs_start)).toString();
-	littlefsOptions.flashMode = preferences.flash_mode;
-	littlefsOptions.flashFreq = preferences.flash_freq;
+	littlefsOptions.flashMode = getFlashMode();
+	littlefsOptions.flashFreq = getFlashFreq();
 	littlefsOptions.flashSize = "0x" + toHex(stringToInt(littlefsOptions.spiffs_start) + stringToInt(littlefsOptions.dataSize));
 
 	return littlefsOptions;
+}
+
+function getImage() {
+	let file = "./mklittlefs.bin";
+
+	if (file.startsWith("."))
+		file = path.join(vscode.workspace.rootPath, file);
+
+	file = path.resolve(file);
+
+	logVerbose(`LITTLEFS Image: "${file}"`);
+	return file;
 }
 
 function executeLittlefs(action) {
@@ -199,6 +234,7 @@ function executeLittlefs(action) {
 	const target = getTarget();
 	const port = getPort();
 	const options = getOptions(target);
+	const image = getImage();
 
 	log(`Action selected: ${action}`);
 	switch (action) {
@@ -210,7 +246,7 @@ function executeLittlefs(action) {
 			break;
 		case "pack":
 			log("Starting pack");
-			packLittlefs(getMkLittlefs(), _path, "", options);
+			packLittlefs(getMkLittlefs(), _path, image, options);
 			break;
 		case "unpack":
 			log("Starting unpack");
